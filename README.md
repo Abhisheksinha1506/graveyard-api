@@ -60,13 +60,22 @@ First, install the dependencies:
 npm install
 ```
 
-Then, run the development server:
+Then, run the development server on port 3001:
 
 ```bash
-npm run dev
+npm run dev -- --port 3001
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3001](http://localhost:3001) with your browser to see the result.
+
+## Supabase Integration
+
+This project is integrated with Supabase for:
+- **Visitor Tracking**: Automatically logs page views to `graveyard_api_visitors`.
+- **Waitlist Signups**: Captures researcher interest in `graveyard_api_signups`.
+- **Analytics**: Pre-configured views for monitoring API interest.
+
+To set up the environment, copy `.env.example` to `.env.local` and add your Supabase credentials.
 
 ## Data Sources
 
