@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
+import { ThemeToggle } from '@/components/theme-toggle'
 import {
   Accordion,
   AccordionContent,
@@ -60,8 +61,17 @@ export default function Home() {
 
       return data && data.length > 0
     } catch (error) {
-      console.error('Unexpected error checking database:', error)
-      throw error // Let the main function handle the error
+      console.error('Error checking database for duplicate:', error)
+      
+      // Fallback to localStorage
+      try {
+        const emails = localStorage.getItem('graveyard_api_emails')
+        const existingEmails = emails ? JSON.parse(emails) : []
+        return existingEmails.includes(normalizedEmail)
+      } catch (localStorageError) {
+        console.error('Error checking localStorage fallback:', localStorageError)
+        return false
+      }
     }
   }
 
@@ -103,7 +113,22 @@ export default function Home() {
 
       if (error) {
         console.error('Error saving email to database:', error)
-        setToast({ message: 'Failed to register email. Please try again.', type: 'error' })
+        
+        // Fallback to localStorage
+        try {
+          const emails = localStorage.getItem('graveyard_api_emails')
+          const existingEmails = emails ? JSON.parse(emails) : []
+          const updatedEmails = [...existingEmails, email.toLowerCase()]
+          localStorage.setItem('graveyard_api_emails', JSON.stringify(updatedEmails))
+          
+          setSubmitted(true)
+          setEmail('')
+          setToast({ message: 'Successfully registered!', type: 'success' })
+          setTimeout(() => setSubmitted(false), 3000)
+        } catch (localStorageError) {
+          console.error('Error saving to localStorage fallback:', localStorageError)
+          setToast({ message: 'Failed to register email. Please try again.', type: 'error' })
+        }
         return
       }
 
@@ -176,7 +201,14 @@ export default function Home() {
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId)
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' })
+      const navHeight = 64 // Navigation bar height (h-16 = 4rem = 64px)
+      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
+      const offsetPosition = elementPosition - navHeight
+      
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      })
     }
     setIsMenuOpen(false)
   }
@@ -207,7 +239,7 @@ export default function Home() {
         </div>
         <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-primary mb-6 text-balance">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground mb-6 text-balance">
               You're studying winners. <span className="text-accent">Here's data on everyone else.</span>
             </h2>
             <p className="text-lg text-muted-foreground leading-8 max-w-3xl mx-auto mb-8 text-balance">
@@ -301,6 +333,7 @@ export default function Home() {
             >
               Contact
             </button>
+            <ThemeToggle />
           </div>
 
           {/* Mobile Menu Button */}
@@ -350,6 +383,9 @@ export default function Home() {
             >
               Contact
             </button>
+            <div className="px-4 py-3">
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </nav>
@@ -579,6 +615,15 @@ export default function Home() {
             <div className="space-y-4">
               <h4 className="font-semibold text-sm mb-3 text-foreground">Resources</h4>
               <ul className="space-y-3 text-sm">
+                <li>
+                  <a
+                    href="/privacy"
+                    className="text-muted-foreground hover:text-accent transition-colors flex items-center gap-2 group"
+                  >
+                    <ExternalLink className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    <span>Privacy Policy</span>
+                  </a>
+                </li>
                 <li>
                   <a
                     href="https://rekt.news"
